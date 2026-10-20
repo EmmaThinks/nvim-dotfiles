@@ -1,0 +1,10 @@
+lazy-lock.json
+
+#swapfiles and temps
+*.swp
+*.swo
+*~
+.netrwhist
+
+#log and cache
+*.log
