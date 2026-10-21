@@ -90,12 +90,17 @@ return {
       end
 
       mason_lsp.setup({
-        ensure_installed = { "clangd", "rust_analyzer", "pyright" },
+        ensure_installed = { "rust_analyzer", "pyright" },
         handlers = {
           function(server_name)
             require("lspconfig")[server_name].setup({
               on_attach = on_attach,
               capabilities = capabilities,
+            })
+      	    require("lspconfig").clangd.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              cmd = { "clangd", "--background-index", "--clang-tidy" },
             })
           end,
         },
