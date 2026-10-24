@@ -8,7 +8,7 @@ return {
       local ok, configs = pcall(require, "nvim-treesitter.configs")
       if not ok then return end
       configs.setup({
-        ensure_installed = { "c", "cpp", "rust", "python", "lua", "bash", "toml", "markdown" },
+        ensure_installed = { "c", "cpp", "rust", "python", "lua", "bash", "toml", "markdown", "go" },
         auto_install = true,
         highlight = { enable = true },
         indent = { enable = true },
@@ -90,21 +90,54 @@ return {
       end
 
       mason_lsp.setup({
-        ensure_installed = { "rust_analyzer", "pyright" },
+        ensure_installed = { "rust_analyzer", "pyright", "gopls" },
         handlers = {
           function(server_name)
             require("lspconfig")[server_name].setup({
               on_attach = on_attach,
               capabilities = capabilities,
             })
-      	    require("lspconfig").clangd.setup({
+          end,
+          ["clangd"] = function()
+            require("lspconfig").clangd.setup({
               on_attach = on_attach,
               capabilities = capabilities,
               cmd = { "clangd", "--background-index", "--clang-tidy" },
             })
           end,
+           ["gopls"] = function()
+            require("lspconfig").gopls.setup({
+              on_attach = on_attach,
+              capabilities = capabilities,
+              settings = {
+                gopls = {
+                  analyses = { unusedparams = true },
+                  staticcheck = true,
+                  gofumpt = true,
+                },
+              },
+            })
+          end,
         },
       })
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        pattern = "*.go",
+        callback = function()
+          vim.lsp.buf.format({ async = false })
+          local params = vim.lsp.util.make_range_params()
+          params.context = {only = {"source.organizeImports"}}
+          local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 1000)
+          for cid, res in pairs(result or {}) do
+            for _, r in pairs(res.result or {}) do
+              if r.edit then
+                vim.lsp.util.apply_workspace_edit(r.edit, "utf-8")
+              else
+                vim.lsp.buf.execute_command(r.command)
+              end
+            end
+          end
+        end,
+      })
     end,
-  },
+  }
 }
