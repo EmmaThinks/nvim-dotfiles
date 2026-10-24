@@ -33,6 +33,21 @@ return {
       },
     },
     config = function()
+      vim.diagnostic.config({
+        virtual_text = {
+          prefix = '●', 
+          source = "always", 
+        },
+        signs = true,
+        update_in_insert = false,
+        underline = true,
+        severity_sort = true,
+        float = {
+          source = "always",
+          border = "rounded",
+        },
+      })
+
       require("mason").setup()
       local mason_lsp = require("mason-lspconfig")
       local cmp = require("cmp")
@@ -87,6 +102,7 @@ return {
         vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
         vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
         vim.keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
+	vim.keymap.set("n", "gl", vim.diagnostic.open_float, opts)
       end
 
       mason_lsp.setup({
